@@ -1,0 +1,6 @@
+V5 DOCKER
+Reemplaza app.py, requirements.txt y render.yaml en GitHub.
+Agrega Dockerfile en la raiz.
+No cambies templates/index.html.
+Haz Commit changes. En Render debe desplegarse como Docker.
+Si el servicio actual no cambia a Docker, crea un Web Service nuevo desde el mismo repositorio y selecciona Docker, Dockerfile ./Dockerfile, plan Free. No agregues Build/Start Command.
