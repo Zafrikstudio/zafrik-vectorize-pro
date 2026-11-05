@@ -28,12 +28,62 @@ def prepare_image(src, max_side=1800):
              max(1, round(image.height * scale))),
             Image.Resampling.LANCZOS
         )
+    return image, original_size
 
-    # El motor VTracer recibe una imagen RGB. Se compone sobre blanco
-    # para evitar resultados impredecibles en zonas transparentes.
-    background = Image.new("RGB", image.size, (255, 255, 255))
-    background.paste(image.convert("RGB"), mask=image.getchannel("A"))
-    return background, original_size
+
+def remove_background_auto(image, tolerance=38, feather=24):
+    """
+    Detecta el color predominante en el borde y lo vuelve transparente.
+    La coincidencia se aplica a toda la imagen para quitar también los
+    huecos interiores que tengan el mismo color de fondo.
+    """
+    from collections import Counter
+
+    rgba = image.convert("RGBA")
+    pixels = rgba.load()
+    width, height = rgba.size
+
+    # Muestreo de los cuatro bordes; cuantizar reduce ruido de antialiasing.
+    samples = []
+    step = max(1, min(width, height) // 500)
+    for x in range(0, width, step):
+        samples.append(pixels[x, 0][:3])
+        samples.append(pixels[x, height - 1][:3])
+    for y in range(0, height, step):
+        samples.append(pixels[0, y][:3])
+        samples.append(pixels[width - 1, y][:3])
+
+    buckets = Counter(
+        (r // 16, g // 16, b // 16) for r, g, b in samples
+    )
+    dominant = buckets.most_common(1)[0][0]
+    cluster = [
+        color for color in samples
+        if (color[0] // 16, color[1] // 16, color[2] // 16) == dominant
+    ]
+    bg = tuple(
+        sum(c[i] for c in cluster) // max(1, len(cluster))
+        for i in range(3)
+    )
+
+    # Distancia RGB euclidiana. La banda de feather suaviza bordes
+    # antialiasados sin aplicar desenfoque a los contornos.
+    hard_limit = max(1, int(tolerance))
+    soft_limit = hard_limit + max(0, int(feather))
+
+    for y in range(height):
+        for x in range(width):
+            r, g, b, a = pixels[x, y]
+            if a == 0:
+                continue
+            distance = ((r-bg[0])**2 + (g-bg[1])**2 + (b-bg[2])**2) ** 0.5
+            if distance <= hard_limit:
+                pixels[x, y] = (r, g, b, 0)
+            elif distance < soft_limit:
+                alpha = int(a * (distance-hard_limit) / max(1, soft_limit-hard_limit))
+                pixels[x, y] = (r, g, b, alpha)
+
+    return rgba, "#{:02x}{:02x}{:02x}".format(*bg)
 
 
 def clean_svg(svg_text):
@@ -68,8 +118,10 @@ def vectorize():
     try:
         detail = max(1, min(8, int(request.form.get("detail", "5"))))
         speckle = max(0, min(64, int(request.form.get("speckle", "4"))))
+        tolerance = max(0, min(150, int(request.form.get("tolerance", "38"))))
     except (TypeError, ValueError):
-        detail, speckle = 5, 4
+        detail, speckle, tolerance = 5, 4, 38
+    remove_bg = request.form.get("remove_bg", "true").lower() == "true"
 
     job = uuid.uuid4().hex
     work = JOBS / job
@@ -81,6 +133,11 @@ def vectorize():
 
     try:
         image, original_size = prepare_image(source)
+        detected_background = None
+        if remove_bg:
+            image, detected_background = remove_background_auto(
+                image, tolerance=tolerance, feather=24
+            )
         image.save(prepared, format="PNG")
 
         colormode = "binary" if mode == "binary" else "color"
@@ -119,9 +176,13 @@ def vectorize():
             svg="/api/svg/" + job,
             engine="VTracer",
             mode=mode,
+            background_removed=remove_bg,
+            detected_background=detected_background,
             note=(
-                "La imagen se ajustó a un máximo de 1800 px por lado "
-                "para proteger los recursos del servidor."
+                "Fondo detectado: " + str(detected_background) + ". "
+                "La imagen se ajustó a un máximo de 1800 px por lado."
+                if remove_bg else
+                "Eliminación automática de fondo desactivada."
             )
         )
 

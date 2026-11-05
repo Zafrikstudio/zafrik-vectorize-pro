@@ -1,7 +1,7 @@
-ZAFRIK STUDIO - VECTORIZE PRO V5
+ZAFRIK STUDIO - VECTORIZE PRO V5.1
 
 ARCHIVOS
-- app.py: servidor Flask y API de vectorización.
+- app.py: servidor Flask, VTracer y eliminación automática del fondo.
 - requirements.txt: dependencias Python, incluido VTracer.
 - Dockerfile: imagen para Render.
 - render.yaml: configuración del servicio Docker.
@@ -30,3 +30,13 @@ NOTAS
 - El tamaño de entrada se limita a 25 MB y el lado mayor se reduce como máximo a 1800 px.
 - El SVG contiene trazados vectoriales; no convierte letras en texto tipográfico editable.
 - El modo poligonal favorece esquinas y líneas rectas, pero la vectorización es una aproximación.
+
+
+NOVEDAD V5.1
+- Eliminación automática del color predominante detectado en los bordes.
+- Control de tolerancia para fondos de distintos colores.
+- Opción para activar/desactivar la eliminación automática.
+- La detección global también hace transparentes los huecos interiores
+  que tengan el mismo color que el fondo detectado.
+- Para mejores resultados, utiliza un fondo uniforme y evita que el diseño
+  toque los bordes de la imagen.
