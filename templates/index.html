@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ZAFRIK STUDIO · VECTORIZE PRO V5</title>
+<title>ZAFRIK STUDIO · VECTORIZE PRO V5.2</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f6fb;color:#171b2c}
@@ -24,7 +24,7 @@ input[type=file]{width:100%;padding:12px;border:1px solid #ccd5e5;border-radius:
 .range{width:100%;accent-color:#7549f3}
 .go,.download{width:100%;border:0;border-radius:13px;padding:14px;color:#fff;font-weight:900;cursor:pointer;background:linear-gradient(90deg,#315cff,#7346f5,#ff2d8d);margin-top:15px;text-align:center;text-decoration:none;display:block}
 .go:disabled{opacity:.6;cursor:wait}
-.note,.status{background:#f2f5fa;border-radius:12px;padding:12px;color:#5c6982;font-size:13px;margin-top:12px;line-height:1.5}
+.note,.status{background:#f2f5fa;border-radius:12px;padding:12px;color:#5c6982;font-size:13px;margin-top:12px;line-height:1.5;overflow-wrap:anywhere}
 .preview{min-height:620px;display:flex;flex-direction:column}
 .stage{flex:1;min-height:460px;border-radius:16px;overflow:hidden;display:flex;align-items:center;justify-content:center;background-color:#fff;background-image:linear-gradient(45deg,#e3e6ed 25%,transparent 25%),linear-gradient(-45deg,#e3e6ed 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e3e6ed 75%),linear-gradient(-45deg,transparent 75%,#e3e6ed 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}
 .stage img{max-width:100%;max-height:570px;object-fit:contain}
@@ -37,53 +37,37 @@ input[type=file]{width:100%;padding:12px;border:1px solid #ccd5e5;border-radius:
 <body>
 <main class="wrap">
 <header class="head">
-<h1>ZAFRIK <span class="grad">VECTORIZE PRO V5</span></h1>
-<div class="sub">Vectorización profesional con motor VTracer · SVG y PNG HD</div>
+<h1>ZAFRIK <span class="grad">VECTORIZE PRO V5.2</span></h1>
+<div class="sub">VTracer 0.6.15 · Optimizado para Render Free · SVG y PNG HD</div>
 </header>
-
 <div class="grid">
 <section>
 <div class="card">
 <h2>1. SUBIR IMAGEN</h2>
 <input id="file" type="file" accept="image/png,image/jpeg,image/webp">
-<div class="note">Formatos: PNG, JPG y WEBP. Máximo 25 MB.</div>
+<div class="note">Formatos: PNG, JPG y WEBP. Máximo 25 MB. El trazado interno se optimiza hasta 1200 px por lado para reducir el uso de RAM.</div>
 </div>
-
 <div class="card">
 <h2>2. MOTOR DE VECTOR</h2>
 <div class="modes">
-<label class="mode">
-<input type="radio" name="mode" value="polygon" checked>
-<span><b>VECTOR PRO · POLIGONAL</b><small>Prioriza esquinas, líneas rectas y formas geométricas.</small></span>
-</label>
-<label class="mode">
-<input type="radio" name="mode" value="spline">
-<span><b>VECTOR COLOR · CURVAS</b><small>Curvas más suaves para ilustraciones y gráficos orgánicos.</small></span>
-</label>
-<label class="mode">
-<input type="radio" name="mode" value="binary">
-<span><b>MONOCROMÁTICO</b><small>Trazado de un solo color para arte lineal y alto contraste.</small></span>
-</label>
+<label class="mode"><input type="radio" name="mode" value="polygon" checked><span><b>VECTOR PRO · POLIGONAL</b><small>Prioriza esquinas, líneas rectas y formas geométricas.</small></span></label>
+<label class="mode"><input type="radio" name="mode" value="spline"><span><b>VECTOR COLOR · CURVAS</b><small>Curvas suaves para ilustraciones y gráficos orgánicos.</small></span></label>
+<label class="mode"><input type="radio" name="mode" value="binary"><span><b>MONOCROMÁTICO</b><small>Trazado de un solo color para arte lineal y alto contraste.</small></span></label>
 </div>
-
 <label class="lbl" for="detail">Precisión de color <span id="detailVal">5</span>/8</label>
 <input class="range" id="detail" type="range" min="1" max="8" value="5">
-
 <label class="lbl" for="speckle">Eliminar detalles pequeños <span id="speckleVal">4</span></label>
 <input class="range" id="speckle" type="range" min="0" max="20" value="4">
-
 <label class="mode" style="margin-top:16px">
 <input id="removeBg" type="checkbox" checked>
 <span><b>ELIMINAR FONDO AUTOMÁTICAMENTE</b><small>Detecta el color predominante del borde y lo vuelve transparente, incluidos los huecos del mismo color.</small></span>
 </label>
 <label class="lbl" for="tolerance">Tolerancia del fondo <span id="toleranceVal">38</span></label>
 <input class="range" id="tolerance" type="range" min="0" max="150" value="38">
-
 <button class="go" id="go">✦ VECTORIZE PRO</button>
-<div class="note">VTracer genera trazados SVG. El modo poligonal conserva mejor los ángulos. La eliminación automática funciona mejor con fondos uniformes o de color predominante.</div>
+<div class="note">V5.2 reduce el consumo de memoria para Render Free. El modo poligonal conserva mejor los ángulos. La eliminación automática funciona mejor con fondos uniformes.</div>
 </div>
 </section>
-
 <section class="card preview">
 <h2>VISTA PREVIA / RESULTADO</h2>
 <div class="stage"><img id="img" alt="Vista previa de la imagen"></div>
@@ -100,78 +84,52 @@ input[type=file]{width:100%;padding:12px;border:1px solid #ccd5e5;border-radius:
 </section>
 </div>
 </main>
-
 <script>
 document.addEventListener("DOMContentLoaded",function(){
-const file=document.getElementById("file");
-const img=document.getElementById("img");
-const go=document.getElementById("go");
-const status=document.getElementById("status");
-const down=document.getElementById("down");
-const pngTools=document.getElementById("pngTools");
-const detail=document.getElementById("detail");
-const speckle=document.getElementById("speckle");
-const tolerance=document.getElementById("tolerance");
-const removeBg=document.getElementById("removeBg");
+const file=document.getElementById("file"), img=document.getElementById("img");
+const go=document.getElementById("go"), status=document.getElementById("status");
+const down=document.getElementById("down"), pngTools=document.getElementById("pngTools");
+const detail=document.getElementById("detail"), speckle=document.getElementById("speckle");
+const tolerance=document.getElementById("tolerance"), removeBg=document.getElementById("removeBg");
 let previewUrl=null;
-
-detail.addEventListener("input",function(){
- document.getElementById("detailVal").textContent=detail.value;
-});
-speckle.addEventListener("input",function(){
- document.getElementById("speckleVal").textContent=speckle.value;
-});
-tolerance.addEventListener("input",function(){
- document.getElementById("toleranceVal").textContent=tolerance.value;
-});
-
+detail.addEventListener("input",()=>document.getElementById("detailVal").textContent=detail.value);
+speckle.addEventListener("input",()=>document.getElementById("speckleVal").textContent=speckle.value);
+tolerance.addEventListener("input",()=>document.getElementById("toleranceVal").textContent=tolerance.value);
 file.addEventListener("change",function(){
- const selected=file.files&&file.files[0];
- if(!selected)return;
+ const selected=file.files&&file.files[0]; if(!selected)return;
  if(previewUrl)URL.revokeObjectURL(previewUrl);
- previewUrl=URL.createObjectURL(selected);
- img.src=previewUrl;
- down.classList.add("hidden");
- pngTools.classList.add("hidden");
+ previewUrl=URL.createObjectURL(selected); img.src=previewUrl;
+ down.classList.add("hidden"); pngTools.classList.add("hidden");
  status.textContent="Imagen cargada. Elige el modo y pulsa VECTORIZE PRO.";
 });
-
 go.addEventListener("click",async function(){
  const selected=file.files&&file.files[0];
  if(!selected){status.textContent="Selecciona una imagen primero.";return;}
-
- go.disabled=true;
- down.classList.add("hidden");
- pngTools.classList.add("hidden");
- status.textContent="VTracer está analizando la imagen y construyendo los trazados SVG...";
-
+ go.disabled=true; down.classList.add("hidden"); pngTools.classList.add("hidden");
+ status.textContent="Procesando con VTracer optimizado para memoria...";
  const form=new FormData();
  form.append("image",selected);
  form.append("mode",document.querySelector('input[name="mode"]:checked').value);
  form.append("detail",detail.value);
  form.append("speckle",speckle.value);
-
+ form.append("remove_bg",removeBg.checked?"true":"false");
+ form.append("tolerance",tolerance.value);
  try{
   const response=await fetch("/api/vectorize",{method:"POST",body:form});
   const raw=await response.text();
   let result;
-  try{result=JSON.parse(raw);}catch(e){throw new Error("Respuesta inválida del servidor.");}
-  if(!response.ok||!result.ok)throw new Error(result.detail||result.error||"No se pudo vectorizar.");
-
+  try{result=JSON.parse(raw);}catch(e){
+   const preview=raw.slice(0,180).replace(/\s+/g," ");
+   throw new Error("HTTP "+response.status+" · Respuesta no JSON: "+preview);
+  }
+  if(!response.ok||!result.ok)throw new Error("HTTP "+response.status+" · "+(result.detail||result.error||"No se pudo vectorizar."));
   img.src=result.svg+"?t="+Date.now();
-  status.textContent="¡Vectorización terminada! Motor: "+result.engine+". Modo: "+result.mode+". "+(result.note||"");
-  down.href="/api/download/"+result.job;
-  down.classList.remove("hidden");
+  status.textContent="¡Vectorización terminada! "+result.engine+" · "+result.mode+". "+(result.note||"");
+  down.href="/api/download/"+result.job; down.classList.remove("hidden");
   pngTools.classList.remove("hidden");
-  pngTools.querySelectorAll("[data-size]").forEach(function(link){
-   link.href="/api/download-png/"+result.job+"/"+link.dataset.size;
-  });
- }catch(error){
-  console.error(error);
-  status.textContent="Error: "+error.message;
- }finally{
-  go.disabled=false;
- }
+  pngTools.querySelectorAll("[data-size]").forEach(link=>link.href="/api/download-png/"+result.job+"/"+link.dataset.size);
+ }catch(error){console.error(error);status.textContent="Error: "+error.message;}
+ finally{go.disabled=false;}
 });
 });
 </script>
