@@ -1,161 +1,167 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ZAFRIK VECTORIZE PRO</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZAFRIK STUDIO · VECTORIZE PRO V5</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f7f8fc;color:#171b2c}
-.wrap{max-width:1220px;margin:auto;padding:28px}.head{text-align:center;margin-bottom:24px}
-.head h1{font-size:34px;margin:0 0 8px}.grad{background:linear-gradient(90deg,#315cff,#7b42f6,#ff2c8c);-webkit-background-clip:text;color:transparent}
-.grid{display:grid;grid-template-columns:350px 1fr;gap:20px}.card{background:#fff;border:1px solid #e0e5f0;border-radius:24px;padding:20px;box-shadow:0 12px 30px #26345b12}
-h2{font-size:18px;margin:0 0 16px}.lbl{font-weight:800;font-size:14px;color:#505b74;margin:14px 0 8px;display:block}
-select,input[type=file]{width:100%;padding:12px;border:1px solid #ccd5e5;border-radius:13px;background:white}
-.colors{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.cbtn{border:1px solid #d7deeb;background:#fff;padding:10px 4px;border-radius:11px;font-weight:800;cursor:pointer}
-.cbtn.on{color:white;border:0;background:linear-gradient(90deg,#315cff,#8a43ef,#ff2d8d)}
-.go,.download{width:100%;border:0;border-radius:13px;padding:14px;color:white;font-weight:900;cursor:pointer;background:linear-gradient(90deg,#315cff,#7346f5,#ff2d8d);margin-top:15px}
-.note,.status{background:#f2f5fa;border-radius:12px;padding:12px;color:#5c6982;font-size:13px;margin-top:12px;line-height:1.4}
-.preview{min-height:580px;display:flex;flex-direction:column}.stage{flex:1;min-height:470px;border-radius:18px;overflow:hidden;display:flex;align-items:center;justify-content:center;background-color:#fff;background-image:linear-gradient(45deg,#ddd 25%,transparent 25%),linear-gradient(-45deg,#ddd 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ddd 75%),linear-gradient(-45deg,transparent 75%,#ddd 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}
-.stage img{max-width:100%;max-height:560px;object-fit:contain}.download{display:none;text-align:center;text-decoration:none}
-@media(max-width:850px){.grid{grid-template-columns:1fr}.wrap{padding:14px}}
-</style></head>
-<body><div class="wrap">
-<div class="head"><h1>ZAFRIK <span class="grad">VECTORIZE PRO</span></h1><div>Convierte ilustraciones en SVG vectorial con fondo transparente.</div></div>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f6fb;color:#171b2c}
+.wrap{max-width:1240px;margin:auto;padding:28px}
+.head{text-align:center;margin:4px 0 26px}
+.head h1{font-size:clamp(26px,4vw,38px);margin:0 0 8px;font-weight:900}
+.grad{background:linear-gradient(90deg,#315cff,#8245f4,#ff318c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:#66718a}
+.grid{display:grid;grid-template-columns:350px 1fr;gap:20px}
+.card{background:#fff;border:1px solid #e1e5ef;border-radius:22px;padding:20px;box-shadow:0 12px 30px #26345b0d;margin-bottom:16px}
+h2{font-size:17px;margin:0 0 16px}
+.lbl{font-weight:800;font-size:13px;color:#505b74;margin:15px 0 8px;display:block}
+input[type=file]{width:100%;padding:12px;border:1px solid #ccd5e5;border-radius:12px;background:#fff}
+.modes{display:grid;gap:8px}
+.mode{border:1px solid #d8deea;border-radius:12px;padding:12px;display:flex;gap:10px;align-items:center;cursor:pointer}
+.mode:has(input:checked){border-color:#7549f3;background:#f6f2ff}
+.mode small{display:block;color:#75809a;margin-top:3px}
+.range{width:100%;accent-color:#7549f3}
+.go,.download{width:100%;border:0;border-radius:13px;padding:14px;color:#fff;font-weight:900;cursor:pointer;background:linear-gradient(90deg,#315cff,#7346f5,#ff2d8d);margin-top:15px;text-align:center;text-decoration:none;display:block}
+.go:disabled{opacity:.6;cursor:wait}
+.note,.status{background:#f2f5fa;border-radius:12px;padding:12px;color:#5c6982;font-size:13px;margin-top:12px;line-height:1.5}
+.preview{min-height:620px;display:flex;flex-direction:column}
+.stage{flex:1;min-height:460px;border-radius:16px;overflow:hidden;display:flex;align-items:center;justify-content:center;background-color:#fff;background-image:linear-gradient(45deg,#e3e6ed 25%,transparent 25%),linear-gradient(-45deg,#e3e6ed 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e3e6ed 75%),linear-gradient(-45deg,transparent 75%,#e3e6ed 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}
+.stage img{max-width:100%;max-height:570px;object-fit:contain}
+.downloads{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.downloads .download{font-size:12px;padding:12px}
+.hidden{display:none!important}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.wrap{padding:14px}.preview{min-height:520px}.stage{min-height:350px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header class="head">
+<h1>ZAFRIK <span class="grad">VECTORIZE PRO V5</span></h1>
+<div class="sub">Vectorización profesional con motor VTracer · SVG y PNG HD</div>
+</header>
+
 <div class="grid">
-<div>
+<section>
 <div class="card">
 <h2>1. SUBIR IMAGEN</h2>
 <input id="file" type="file" accept="image/png,image/jpeg,image/webp">
+<div class="note">Formatos: PNG, JPG y WEBP. Máximo 25 MB.</div>
 </div>
-<div class="card" style="margin-top:18px">
-<h2>2. TIPO DE VECTOR</h2>
-<label class="lbl">Modo de trazado</label>
-<select id="mode"><option value="color">Máximo detalle a color</option><option value="flat">Colores planos</option></select>
-<label class="lbl">Cantidad de colores</label>
-<div class="colors">
-<button class="cbtn" data-n="8">8</button><button class="cbtn on" data-n="16">16</button><button class="cbtn" data-n="24">24</button><button class="cbtn" data-n="32">32</button>
+
+<div class="card">
+<h2>2. MOTOR DE VECTOR</h2>
+<div class="modes">
+<label class="mode">
+<input type="radio" name="mode" value="polygon" checked>
+<span><b>VECTOR PRO · POLIGONAL</b><small>Prioriza esquinas, líneas rectas y formas geométricas.</small></span>
+</label>
+<label class="mode">
+<input type="radio" name="mode" value="spline">
+<span><b>VECTOR COLOR · CURVAS</b><small>Curvas más suaves para ilustraciones y gráficos orgánicos.</small></span>
+</label>
+<label class="mode">
+<input type="radio" name="mode" value="binary">
+<span><b>MONOCROMÁTICO</b><small>Trazado de un solo color para arte lineal y alto contraste.</small></span>
+</label>
 </div>
-<div class="note"><b>16 colores recomendado:</b> mejor equilibrio entre velocidad, detalle y tamaño del SVG.<br><br>8: rápido · logos y diseños simples.<br>16: recomendado.<br>24: máximo detalle · más lento.<br>32: muy pesado en Render Free.</div>
-<button class="go" id="go">✨ VECTORIZE PRO</button>
-</div></div>
-<div class="card preview">
-<h2>RESULTADO VECTORIAL</h2>
-<div class="stage"><img id="img" alt=""></div>
-<div class="status" id="status">Sube una imagen y selecciona la cantidad de colores.</div>
-<a class="download" id="down">⬇ DESCARGAR SVG VECTORIAL</a>
-<div id="pngTools" style="display:none;margin-top:12px">
-  <div class="lbl">PNG transparente de alta resolución</div>
-  <div class="colors">
-    <button type="button" class="cbtn pngsize" data-size="3000">3000 px</button>
-    <button type="button" class="cbtn pngsize on" data-size="3600">3600 px</button>
-    <button type="button" class="cbtn pngsize" data-size="4800">4800 px</button>
-  </div>
-  <a class="download" id="downPng" style="display:block">⬇ DESCARGAR PNG HD</a>
+
+<label class="lbl" for="detail">Precisión de color <span id="detailVal">5</span>/8</label>
+<input class="range" id="detail" type="range" min="1" max="8" value="5">
+
+<label class="lbl" for="speckle">Eliminar detalles pequeños <span id="speckleVal">4</span></label>
+<input class="range" id="speckle" type="range" min="0" max="20" value="4">
+
+<button class="go" id="go">✦ VECTORIZE PRO</button>
+<div class="note">VTracer genera trazados SVG. El modo poligonal conserva mejor los ángulos, pero ningún vectorizador garantiza una copia idéntica al píxel original.</div>
+</div>
+</section>
+
+<section class="card preview">
+<h2>VISTA PREVIA / RESULTADO</h2>
+<div class="stage"><img id="img" alt="Vista previa de la imagen"></div>
+<div class="status" id="status">Sube una imagen para comenzar.</div>
+<a class="download hidden" id="down" href="#">⬇ DESCARGAR SVG VECTORIAL</a>
+<div id="pngTools" class="hidden">
+<div class="lbl">PNG HD</div>
+<div class="downloads">
+<a class="download" data-size="3000" href="#">3000 px</a>
+<a class="download" data-size="3600" href="#">3600 px</a>
+<a class="download" data-size="4800" href="#">4800 px</a>
 </div>
 </div>
-</div></div>
+</section>
+</div>
+</main>
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const fileInput = document.getElementById('file');
-  const previewImg = document.getElementById('img');
-  const goButton = document.getElementById('go');
-  const statusBox = document.getElementById('status');
-  const downloadButton = document.getElementById('down');
-  const modeSelect = document.getElementById('mode');
-  const pngTools = document.getElementById('pngTools');
-  const downPng = document.getElementById('downPng');
-  const pngButtons = document.querySelectorAll('.pngsize');
-  let pngSize = 3600;
-  const colorButtons = document.querySelectorAll('.cbtn');
+document.addEventListener("DOMContentLoaded",function(){
+const file=document.getElementById("file");
+const img=document.getElementById("img");
+const go=document.getElementById("go");
+const status=document.getElementById("status");
+const down=document.getElementById("down");
+const pngTools=document.getElementById("pngTools");
+const detail=document.getElementById("detail");
+const speckle=document.getElementById("speckle");
+let previewUrl=null;
 
-  let colors = 16;
-  pngButtons.forEach(function(button){
-    button.addEventListener('click',function(){
-      pngButtons.forEach(function(b){b.classList.remove('on');});
-      button.classList.add('on');
-      pngSize=Number(button.dataset.size);
-      if(job) downPng.href='/api/download-png/'+job+'/'+pngSize;
-    });
-  });
-
-  colorButtons.forEach(function (button) {
-    button.addEventListener('click', function () {
-      colorButtons.forEach(function (b) { b.classList.remove('on'); });
-      button.classList.add('on');
-      colors = Number(button.dataset.n);
-      statusBox.textContent = colors + ' colores seleccionados. Pulsa VECTORIZE PRO.';
-    });
-  });
-
-  fileInput.addEventListener('change', function () {
-    const selectedFile = fileInput.files && fileInput.files[0];
-    if (!selectedFile) return;
-    previewImg.src = URL.createObjectURL(selectedFile);
-    statusBox.textContent = 'Imagen cargada. Selecciona los colores y pulsa VECTORIZE PRO.';
-    downloadButton.style.display = 'none'; pngTools.style.display='none';
-  });
-
-  goButton.addEventListener('click', async function () {
-    const selectedFile = fileInput.files && fileInput.files[0];
-    if (!selectedFile) {
-      statusBox.textContent = 'Selecciona una imagen primero.';
-      return;
-    }
-
-    goButton.disabled = true;
-    downloadButton.style.display = 'none'; pngTools.style.display='none';
-    statusBox.textContent = 'Preparando imagen...';
-    let phase = 0;
-    const progressTimer = setInterval(function () {
-      phase++;
-      if (phase === 1) statusBox.textContent = 'Vectorizando capas de color...';
-      if (phase === 2) statusBox.textContent = 'Generando SVG vectorial...';
-      if (phase >= 3) statusBox.textContent = 'Finalizando SVG...';
-    }, 2500);
-
-    const form = new FormData();
-    form.append('image', selectedFile);
-    form.append('mode', modeSelect.value);
-    form.append('colors', String(colors));
-
-    try {
-      const response = await fetch('/api/vectorize', {
-        method: 'POST',
-        body: form
-      });
-
-      const raw = await response.text();
-      let data;
-      try {
-        data = JSON.parse(raw);
-      } catch (_) {
-        throw new Error('El servidor devolvió una respuesta no válida.');
-      }
-
-      if (!response.ok || !data.ok) {
-        throw new Error(data.detail || data.error || 'No se pudo vectorizar.');
-      }
-
-      previewImg.src = data.svg + '?t=' + Date.now();
-      statusBox.textContent =
-        'Vectorización terminada · ' + (data.colors || colors) + ' capas de color.';
-
-      downloadButton.href = '/api/download/' + data.job;
-      downloadButton.style.display = 'block';
-      const pngToolsNow = document.getElementById('pngTools');
-      const downPngNow = document.getElementById('downPng');
-      if (pngToolsNow && downPngNow) {
-        pngToolsNow.style.display = 'block';
-        downPngNow.href = '/api/download-png/' + data.job + '/' + pngSize;
-      }
-      pngTools.style.display = 'block';
-      downPng.href = '/api/download-png/' + data.job + '/' + pngSize;
-    } catch (error) {
-      console.error(error);
-      statusBox.textContent = 'Error: ' + error.message;
-    } finally {
-      clearInterval(progressTimer);
-      goButton.disabled = false;
-    }
-  });
+detail.addEventListener("input",function(){
+ document.getElementById("detailVal").textContent=detail.value;
 });
-</script></body></html>
+speckle.addEventListener("input",function(){
+ document.getElementById("speckleVal").textContent=speckle.value;
+});
+
+file.addEventListener("change",function(){
+ const selected=file.files&&file.files[0];
+ if(!selected)return;
+ if(previewUrl)URL.revokeObjectURL(previewUrl);
+ previewUrl=URL.createObjectURL(selected);
+ img.src=previewUrl;
+ down.classList.add("hidden");
+ pngTools.classList.add("hidden");
+ status.textContent="Imagen cargada. Elige el modo y pulsa VECTORIZE PRO.";
+});
+
+go.addEventListener("click",async function(){
+ const selected=file.files&&file.files[0];
+ if(!selected){status.textContent="Selecciona una imagen primero.";return;}
+
+ go.disabled=true;
+ down.classList.add("hidden");
+ pngTools.classList.add("hidden");
+ status.textContent="VTracer está analizando la imagen y construyendo los trazados SVG...";
+
+ const form=new FormData();
+ form.append("image",selected);
+ form.append("mode",document.querySelector('input[name="mode"]:checked').value);
+ form.append("detail",detail.value);
+ form.append("speckle",speckle.value);
+
+ try{
+  const response=await fetch("/api/vectorize",{method:"POST",body:form});
+  const raw=await response.text();
+  let result;
+  try{result=JSON.parse(raw);}catch(e){throw new Error("Respuesta inválida del servidor.");}
+  if(!response.ok||!result.ok)throw new Error(result.detail||result.error||"No se pudo vectorizar.");
+
+  img.src=result.svg+"?t="+Date.now();
+  status.textContent="¡Vectorización terminada! Motor: "+result.engine+". Modo: "+result.mode+". "+(result.note||"");
+  down.href="/api/download/"+result.job;
+  down.classList.remove("hidden");
+  pngTools.classList.remove("hidden");
+  pngTools.querySelectorAll("[data-size]").forEach(function(link){
+   link.href="/api/download-png/"+result.job+"/"+link.dataset.size;
+  });
+ }catch(error){
+  console.error(error);
+  status.textContent="Error: "+error.message;
+ }finally{
+  go.disabled=false;
+ }
+});
+});
+</script>
+</body>
+</html>

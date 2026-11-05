@@ -1,112 +1,191 @@
 from flask import Flask, render_template, request, send_file, jsonify
 from pathlib import Path
-from PIL import Image
-import tempfile, uuid, subprocess, traceback, re, shutil
+from PIL import Image, ImageOps
+import tempfile
+import uuid
+import traceback
+import re
+import shutil
 import cairosvg
+import vtracer
 
-app=Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"]=25*1024*1024
-JOBS=Path(tempfile.gettempdir())/"zafrik_vectorize_color"
+app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
+
+JOBS = Path(tempfile.gettempdir()) / "zafrik_vectorize_v5"
 JOBS.mkdir(exist_ok=True)
 
+
+def prepare_image(src, max_side=1800):
+    image = Image.open(src)
+    image = ImageOps.exif_transpose(image).convert("RGBA")
+    original_size = image.size
+
+    scale = min(1.0, max_side / max(image.size))
+    if scale < 1:
+        image = image.resize(
+            (max(1, round(image.width * scale)),
+             max(1, round(image.height * scale))),
+            Image.Resampling.LANCZOS
+        )
+
+    # El motor VTracer recibe una imagen RGB. Se compone sobre blanco
+    # para evitar resultados impredecibles en zonas transparentes.
+    background = Image.new("RGB", image.size, (255, 255, 255))
+    background.paste(image.convert("RGB"), mask=image.getchannel("A"))
+    return background, original_size
+
+
+def clean_svg(svg_text):
+    svg_text = re.sub(
+        r"<metadata>.*?</metadata>", "", svg_text, flags=re.S | re.I
+    )
+    if "<svg" not in svg_text.lower():
+        raise ValueError("VTracer no devolvió un SVG válido.")
+    return svg_text
+
+
 @app.get("/")
-def home(): return render_template("index.html")
+def home():
+    return render_template("index.html")
 
-def prepare(src,max_side=950):
-    im=Image.open(src).convert("RGBA"); original=im.size
-    s=min(1.0,max_side/max(im.size))
-    if s<1: im=im.resize((max(1,round(im.width*s)),max(1,round(im.height*s))),Image.Resampling.LANCZOS)
-    return im,original
-
-def quantize(im,colors):
-    alpha=im.getchannel("A")
-    base=Image.new("RGB",im.size,(255,255,255))
-    base.paste(im.convert("RGB"),mask=alpha)
-    q=base.quantize(colors=colors,method=Image.Quantize.MEDIANCUT,dither=Image.Dither.NONE)
-    pal=q.getpalette()
-    used=sorted(q.getcolors(maxcolors=65536) or [],reverse=True)
-    return q,alpha,[(idx,tuple(pal[idx*3:idx*3+3]),count) for count,idx in used]
-
-def mask_for(q,alpha,idx,dst):
-    qi=q.load(); ai=alpha.load()
-    m=Image.new("1",q.size,1); mp=m.load()
-    for y in range(q.height):
-        for x in range(q.width):
-            if ai[x,y]>20 and qi[x,y]==idx: mp[x,y]=0
-    m.save(dst,"PPM")
-
-def trace(mask,svg):
-    return subprocess.run(["potrace",str(mask),"-s","-o",str(svg),"--turdsize","8","--alphamax","1.0","--opttolerance","0.34"],
-                          stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,timeout=18)
-
-def body(txt):
-    m=re.search(r"<svg[^>]*>(.*)</svg>",txt,flags=re.S|re.I)
-    if not m:return ""
-    b=re.sub(r"<metadata>.*?</metadata>","",m.group(1),flags=re.S|re.I)
-    return b.replace('fill="#000000"','fill="currentColor"').strip()
 
 @app.get("/api/health")
 def health():
-    r=subprocess.run(["potrace","--version"],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,timeout=5)
-    return jsonify(ok=r.returncode==0,engine=(r.stdout or r.stderr).splitlines()[0])
+    return jsonify(ok=True, engine="VTracer", version="0.6.15")
+
 
 @app.post("/api/vectorize")
 def vectorize():
-    f=request.files.get("image")
-    if not f or not f.filename:return jsonify(ok=False,error="Selecciona una imagen."),400
-    try: colors=max(2,min(32,int(request.form.get("colors","16"))))
-    except: colors=16
-    job=uuid.uuid4().hex; work=JOBS/job; work.mkdir(exist_ok=True)
-    raw=work/"input"; out=JOBS/(job+".svg"); f.save(raw)
+    upload = request.files.get("image")
+    if not upload or not upload.filename:
+        return jsonify(ok=False, error="Selecciona una imagen."), 400
+
+    mode = request.form.get("mode", "polygon")
+    if mode not in ("polygon", "spline", "binary"):
+        mode = "polygon"
+
     try:
-        im,original=prepare(raw)
-        q,alpha,layers=quantize(im,colors)
-        minimum=max(15,int(im.width*im.height*0.0012))
-        layers=[x for x in layers if x[2]>=minimum]
-        groups=[]
-        for n,(idx,rgb,count) in enumerate(layers):
-            pbm=work/f"l{n}.pbm"; sv=work/f"l{n}.svg"
-            mask_for(q,alpha,idx,pbm); r=trace(pbm,sv)
-            if r.returncode==0 and sv.exists():
-                b=body(sv.read_text(errors="ignore"))
-                if b:
-                    hx="#%02x%02x%02x"%rgb
-                    groups.append('<g style="color:%s">%s</g>'%(hx,b))
-        if not groups:return jsonify(ok=False,error="No se pudieron generar capas vectoriales."),422
-        w,h=im.size
-        final='<?xml version="1.0" standalone="no"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="%s" height="%s" viewBox="0 0 %s %s" preserveAspectRatio="xMidYMid meet">\n%s\n</svg>'%(w,h,w,h,"".join(groups))
-        out.write_text(final,encoding="utf-8")
-        print("[ZAFRIK V5.4 COLOR]",original,im.size,"layers",len(groups),flush=True)
-        return jsonify(ok=True,job=job,svg="/api/svg/"+job,engine="Potrace Color Layers",colors=len(groups))
-    except Exception as e:
+        detail = max(1, min(8, int(request.form.get("detail", "5"))))
+        speckle = max(0, min(64, int(request.form.get("speckle", "4"))))
+    except (TypeError, ValueError):
+        detail, speckle = 5, 4
+
+    job = uuid.uuid4().hex
+    work = JOBS / job
+    work.mkdir(exist_ok=True)
+    source = work / "input_image"
+    prepared = work / "prepared.png"
+    output = JOBS / (job + ".svg")
+    upload.save(source)
+
+    try:
+        image, original_size = prepare_image(source)
+        image.save(prepared, format="PNG")
+
+        colormode = "binary" if mode == "binary" else "color"
+        hierarchy = "cutout" if mode == "polygon" else "stacked"
+        trace_mode = "polygon" if mode in ("polygon", "binary") else "spline"
+
+        vtracer.convert_image_to_svg_py(
+            str(prepared),
+            str(output),
+            colormode=colormode,
+            hierarchical=hierarchy,
+            mode=trace_mode,
+            filter_speckle=speckle,
+            color_precision=max(3, min(8, detail)),
+            layer_difference=max(8, 32 - detail * 3),
+            corner_threshold=60,
+            length_threshold=4.0,
+            max_iterations=10,
+            splice_threshold=45,
+            path_precision=3
+        )
+
+        svg_text = clean_svg(
+            output.read_text(encoding="utf-8", errors="replace")
+        )
+        output.write_text(svg_text, encoding="utf-8")
+
+        print(
+            "[ZAFRIK VECTORIZE PRO V5 - VTRACER]",
+            original_size, image.size, mode, flush=True
+        )
+
+        return jsonify(
+            ok=True,
+            job=job,
+            svg="/api/svg/" + job,
+            engine="VTracer",
+            mode=mode,
+            note=(
+                "La imagen se ajustó a un máximo de 1800 px por lado "
+                "para proteger los recursos del servidor."
+            )
+        )
+
+    except Exception as exc:
         traceback.print_exc()
-        return jsonify(ok=False,error="No se pudo vectorizar.",detail=str(e)),500
-    finally: shutil.rmtree(work,ignore_errors=True)
+        output.unlink(missing_ok=True)
+        return jsonify(
+            ok=False,
+            error="No se pudo vectorizar la imagen.",
+            detail=str(exc)
+        ), 500
+
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
 
 @app.get("/api/svg/<job>")
-def svg(job):
-    p=JOBS/(job+".svg")
-    if not job.isalnum() or not p.exists():return "Archivo no encontrado",404
-    return send_file(p,mimetype="image/svg+xml")
+def preview_svg(job):
+    path = JOBS / (job + ".svg")
+    if not job.isalnum() or not path.exists():
+        return "Archivo no encontrado", 404
+    return send_file(path, mimetype="image/svg+xml")
+
 
 @app.get("/api/download/<job>")
-def download(job):
-    p=JOBS/(job+".svg")
-    if not job.isalnum() or not p.exists():return "Archivo no encontrado",404
-    return send_file(p,mimetype="image/svg+xml",as_attachment=True,download_name="ZAFRIK_VECTORIZE_PRO_COLOR.svg")
+def download_svg(job):
+    path = JOBS / (job + ".svg")
+    if not job.isalnum() or not path.exists():
+        return "Archivo no encontrado", 404
+    return send_file(
+        path,
+        mimetype="image/svg+xml",
+        as_attachment=True,
+        download_name="ZAFRIK_VECTORIZE_PRO_V5.svg"
+    )
 
 
 @app.get("/api/download-png/<job>/<int:size>")
-def download_png(job,size):
-    if size not in (3000,3600,4800):
-        return jsonify(ok=False,error="Tamaño no permitido."),400
-    svg_path=JOBS/(job+".svg")
+def download_png(job, size):
+    if size not in (3000, 3600, 4800):
+        return jsonify(ok=False, error="Tamaño no permitido."), 400
+
+    svg_path = JOBS / (job + ".svg")
     if not job.isalnum() or not svg_path.exists():
-        return "Archivo no encontrado",404
-    png_path=JOBS/(job+"_"+str(size)+".png")
+        return "Archivo no encontrado", 404
+
+    png_path = JOBS / (job + "_" + str(size) + ".png")
     try:
-        cairosvg.svg2png(url=str(svg_path),write_to=str(png_path),output_width=size)
-        return send_file(png_path,mimetype="image/png",as_attachment=True,
-                         download_name="ZAFRIK_VECTORIZE_PRO_"+str(size)+"px.png")
-    except Exception as e:
-        return jsonify(ok=False,error="No se pudo generar el PNG.",detail=str(e)),500
+        cairosvg.svg2png(
+            url=str(svg_path),
+            write_to=str(png_path),
+            output_width=size
+        )
+        return send_file(
+            png_path,
+            mimetype="image/png",
+            as_attachment=True,
+            download_name=(
+                "ZAFRIK_VECTORIZE_PRO_V5_" + str(size) + "px.png"
+            )
+        )
+    except Exception as exc:
+        return jsonify(
+            ok=False,
+            error="No se pudo generar el PNG.",
+            detail=str(exc)
+        ), 500
